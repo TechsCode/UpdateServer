@@ -1,0 +1,32 @@
+plugins {
+    id 'org.springframework.boot' version '2.2.0.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'java'
+    id 'application'
+}
+
+group 'me.TechsCode'
+
+sourceCompatibility = 1.8
+mainClassName = "me.TechsCode.UpdateServer.UpdateServer"
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile files("libs/SpigotAPI.jar")
+    compile 'mysql:mysql-connector-java:5.1.17'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.auth0:java-jwt:3.9.0'
+    implementation 'com.github.HayateLaTech:OAuth2Discord:-SNAPSHOT'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    version = null
+}

@@ -1,0 +1,26 @@
+{
+  "host": "https://domain.com",
+  "port": "8090",
+
+  "authorSpigotId": "00000",
+
+  "mysql": {
+    "host": "localhost",
+    "port": "3306",
+    "database": "database",
+    "username": "username",
+    "password": "password"
+  },
+
+  "discord": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+
+  "spigotApi": {
+    "url": "https://api.domain.com",
+    "apiKey": "xxxxxx"
+  },
+
+  "configured": false
+}
