@@ -72,7 +72,7 @@ public class Requests {
 
         System.out.println("["+user.getUsername()+"] has been authenticated");
 
-        return "<h2>Successfully Authenticated</h2><p>The download of the update should start very soon.</b>";
+        return "<h2>Successfully Authenticated</h2><p>You can now close this window</b>";
     }
 
     @GetMapping("/{artifact}/download")
