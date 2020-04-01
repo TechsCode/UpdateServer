@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 public class Requests {
@@ -103,9 +105,13 @@ public class Requests {
             return "NOT-VERIFIED";
         }
 
-        String[] purchasedArtifacts = UpdateServer.getPurchasedArtifacts(userId);
+        List<String> purchasedArtifacts = Arrays.stream(UpdateServer.getPurchasedArtifacts(userId))
+                .map(name -> name.replace(" ", "").toLowerCase())
+                .collect(Collectors.toList());
 
-        if(!userId.equals(UpdateServer.getConfig().getAuthorSpigotId()) && !Arrays.asList(purchasedArtifacts).contains(artifact.getName())){
+        boolean purchased = purchasedArtifacts.contains(artifact.getName().toLowerCase());
+
+        if(!userId.equals(UpdateServer.getConfig().getAuthorSpigotId()) && !purchased){
             return "NOT-PURCHASED";
         }
 
