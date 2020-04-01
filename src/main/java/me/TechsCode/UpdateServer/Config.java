@@ -23,7 +23,7 @@ public class Config {
 
         if(!file.exists()){
             try {
-                InputStream src = Config.class.getResourceAsStream("/deployment.json");
+                InputStream src = Config.class.getResourceAsStream("/config.json");
                 Files.copy(src, Paths.get(file.toURI()), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 e.printStackTrace();
