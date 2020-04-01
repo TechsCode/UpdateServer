@@ -93,7 +93,7 @@ public class Requests {
 
         Authentication authentication = AuthenticationManager.getAuthenticationByUID(uid);
 
-        if(authentication == null){
+        if(authentication == null || authentication.getDiscordId() == null){
             return "NOT-AUTHENTICATED";
         }
 

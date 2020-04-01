@@ -19,7 +19,7 @@
 
   "spigotApi": {
     "url": "https://api.domain.com",
-    "apiKey": "xxxxxx"
+    "token": "xxxxxx"
   },
 
   "configured": false
