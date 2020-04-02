@@ -33,6 +33,11 @@ public class Requests {
                 .setRedirectURI(config.getHost()+"/discord");
     }
 
+    @RequestMapping("/")
+    public String index() {
+        return "Im a happy server that updates your plugins :)";
+    }
+
     @GetMapping("/{artifact}/version")
     public String retrieveVersion(@PathVariable(value = "artifact") String artifactName){
         Artifact artifact = UpdateServer.getArtifact(artifactName);
@@ -124,6 +129,8 @@ public class Requests {
         }
 
         try {
+            AuthenticationManager.revokeAuthentication(authentication);
+
             Resource resource = new UrlResource(artifact.getFile().toURI());
 
             System.out.println("["+authentication.getUsername()+"] is now updating "+artifact.getName());

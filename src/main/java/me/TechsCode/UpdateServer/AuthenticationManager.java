@@ -7,7 +7,11 @@ public class AuthenticationManager {
     private static HashMap<String, Authentication> authentications = new HashMap<>();
 
     public static void newAuthentication(String ipAddr, String uid){
-        authentications.put(ipAddr, new Authentication(uid));
+        authentications.put(ipAddr, new Authentication(uid, ipAddr));
+    }
+
+    public static void revokeAuthentication(Authentication authentication){
+        authentications.remove(authentication.getIpAddr());
     }
 
 

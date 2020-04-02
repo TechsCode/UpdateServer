@@ -2,12 +2,13 @@ package me.TechsCode.UpdateServer;
 
 public class Authentication {
 
-    private String uid;
+    private String uid, ipAddr;
 
     private String discordId, username;
 
-    public Authentication(String uid) {
+    public Authentication(String uid, String ipAddr) {
         this.uid = uid;
+        this.ipAddr = ipAddr;
     }
 
     public void setDiscordId(String discordId) {
@@ -28,5 +29,9 @@ public class Authentication {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getIpAddr() {
+        return ipAddr;
     }
 }
