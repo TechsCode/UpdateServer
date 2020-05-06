@@ -107,6 +107,7 @@ public class Requests {
         String userId = UpdateServer.getVerifiedSpigotId(authentication.getDiscordId());
 
         if(userId == null){
+            System.out.println("["+authentication.getUsername()+"] could not update because he is not verified");
             return "NOT-VERIFIED";
         }
 
@@ -117,6 +118,7 @@ public class Requests {
         boolean purchased = purchasedArtifacts.contains(artifact.getName().toLowerCase());
 
         if(!userId.equals(UpdateServer.getConfig().getAuthorSpigotId()) && !purchased){
+            System.out.println("["+authentication.getUsername()+"] could not update because he has not purchased "+artifact.getName());
             return "NOT-PURCHASED";
         }
 
