@@ -32,8 +32,6 @@ public class UpdateServer {
                 .singletonMap("server.port", config.getPort()));
 
         app.run(args);
-
-        System.out.println("Startup Completed");
     }
 
     public static Artifact getArtifact(String name){
