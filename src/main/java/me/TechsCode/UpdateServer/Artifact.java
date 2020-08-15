@@ -24,4 +24,14 @@ public class Artifact {
     public File getFile() {
         return file;
     }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Artifact && hashCode() == obj.hashCode();
+    }
 }
