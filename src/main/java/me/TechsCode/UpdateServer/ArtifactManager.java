@@ -45,18 +45,9 @@ public abstract class ArtifactManager extends Thread {
 
                             List<String> lines = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).lines().collect(Collectors.toList());
 
-                            Optional<String> name = lines.stream()
-                                    .filter(line -> line.startsWith("name"))
-                                    .map(line -> line.replace("name: ", "")).findFirst();
-
-                            Optional<String> version = lines.stream()
-                                    .filter(line -> line.startsWith("version"))
-                                    .map(line -> line.replace("version: ", "")).findFirst();
-
-                            Optional<Integer> build = lines.stream()
-                                    .filter(line -> line.startsWith("build"))
-                                    .map(line -> line.replace("build: ", ""))
-                                    .map(Integer::parseInt).findFirst();
+                            Optional<String> name = lines.stream().filter(line -> line.startsWith("name")).map(line -> line.replace("name: ", "")).findFirst();
+                            Optional<String> version = lines.stream().filter(line -> line.startsWith("version")).map(line -> line.replace("version: ", "")).findFirst();
+                            Optional<Integer> build = lines.stream().filter(line -> line.startsWith("build")).map(line -> line.replace("build: ", "")).map(Integer::parseInt).findFirst();
 
                             if(name.isPresent() && version.isPresent() && build.isPresent()){
                                 File destination = new File(artifactsFolder.getAbsolutePath()+"/"+name.get()+"/"+version.get()+"/"+build.get()+"/"+file.getName());
