@@ -77,7 +77,7 @@ public class Requests {
     }
 
     @GetMapping("/{artifact}/download")
-    public Object download(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request) {
+    public Object legacyDownload(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request) {
         if(artifactName == null) return "NO-ARTIFACT-NAME";
 
         Optional<String> newestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
