@@ -14,7 +14,6 @@ public class AuthenticationManager {
         authentications.remove(authentication.getIpAddr());
     }
 
-
     public static Authentication getAuthentication(String ipAddr){
         return authentications.getOrDefault(ipAddr, null);
     }

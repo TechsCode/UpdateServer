@@ -24,4 +24,8 @@ public class ArtifactList extends ArrayList<Artifact> {
         return stream().min(Comparator.comparing(Artifact::getBuild));
     }
 
+    public Optional<Artifact> getArtifactWithBuildNumber(int build){
+        return stream().filter(a -> a.getBuild() == build).findFirst();
+    }
+
 }

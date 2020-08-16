@@ -41,7 +41,6 @@ public class Requests {
         Optional<String> bestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
 
         return bestVersion.orElseGet(() -> "Could not find artifact with the name " + artifactName);
-
     }
 
     @GetMapping("/authenticate")
@@ -78,63 +77,61 @@ public class Requests {
     }
 
     @GetMapping("/{artifact}/download")
-    public Object requestUpdate(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request){
-        if(uid == null){
-            return "NO-UID";
-        }
-
-        if(artifactName == null){
-            return "NO-ARTIFACT-NAME";
-        }
+    public Object download(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request) {
+        if(artifactName == null) return "NO-ARTIFACT-NAME";
 
         Optional<String> newestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
-
-        // If there is no version available, the artifact does not exist
-        if(!newestVersion.isPresent()){
-            return "NO-ARTIFACT";
-        }
-
-
-        Authentication authentication = AuthenticationManager.getAuthenticationByUID(uid);
-
-        if(authentication == null || authentication.getDiscordId() == null){
-            return "NOT-AUTHENTICATED";
-        }
-
-        String userId = UpdateServer.getVerifiedSpigotId(authentication.getDiscordId());
-
-        if(userId == null){
-            System.out.println("["+authentication.getUsername()+"] could not update because he is not verified");
-            return "NOT-VERIFIED";
-        }
-
-        List<String> purchasedArtifacts = Arrays.stream(UpdateServer.getPurchasedArtifacts(userId))
-                .map(name -> name.replace(" ", "").toLowerCase())
-                .collect(Collectors.toList());
-
-        boolean purchased = purchasedArtifacts.contains(artifactName.toLowerCase());
-
-        if(!userId.equals(UpdateServer.getConfig().getAuthorSpigotId()) && !purchased){
-            System.out.println("["+authentication.getUsername()+"] could not update because he has not purchased "+artifactName);
-            return "NOT-PURCHASED";
-        }
 
         Optional<Artifact> artifact = UpdateServer.artifacts
                 .filterByName(artifactName)
                 .filterByVersion(newestVersion.get())
                 .getOldestArtifact();
 
-        if(!artifact.isPresent()){
-            System.out.println("Could not get oldest artifact of "+artifactName);
+        if(artifact.isPresent()){
+            return download(uid, artifactName, artifact.get().getBuild()+"", request);
+        } else {
             return "NO-ARTIFACT";
         }
+    }
 
-        // Try to determine file's content type
-        String contentType = request.getServletContext().getMimeType(artifact.get().getFile().getAbsolutePath());
+    @GetMapping("/{artifact}/download")
+    public Object download(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, @PathVariable(value = "build") String build, HttpServletRequest request){
+        if(uid == null) return "NO-UID";
+        if(artifactName == null) return "NO-ARTIFACT-NAME";
 
-        // Fallback to the default content type if type could not be determined
-        if(contentType == null) {
-            contentType = "application/octet-stream";
+        // Get Authentication of User
+        Authentication authentication = AuthenticationManager.getAuthenticationByUID(uid);
+        if(authentication == null || authentication.getDiscordId() == null){
+            return "NOT-AUTHENTICATED";
+        }
+
+        // Get Spigot UserId from Database (which is only possible if he is verified)
+        String userId = UpdateServer.getVerifiedSpigotId(authentication.getDiscordId());
+        if(userId == null){
+            System.out.println("["+authentication.getUsername()+"] could not update because he is not verified");
+            return "NOT-VERIFIED";
+        }
+
+        // Check if he has purchased the plugin
+        List<String> purchasedArtifacts = Arrays.stream(UpdateServer.getPurchasedArtifacts(userId))
+                .map(name -> name.replace(" ", "").toLowerCase())
+                .collect(Collectors.toList());
+
+        boolean isAuthor = userId.equals(UpdateServer.getConfig().getAuthorSpigotId());
+        boolean hasPurchased = purchasedArtifacts.contains(artifactName.toLowerCase());
+
+        if(!isAuthor && !hasPurchased){
+            System.out.println("["+authentication.getUsername()+"] could not update because he has not purchased "+artifactName);
+            return "NOT-PURCHASED";
+        }
+
+        Optional<Artifact> artifact = UpdateServer.artifacts
+                .filterByName(artifactName)
+                .getArtifactWithBuildNumber(Integer.parseInt(build));
+
+        if(!artifact.isPresent()){
+            System.out.println("Could not get desired artifact");
+            return "NO-ARTIFACT";
         }
 
         try {
@@ -142,10 +139,10 @@ public class Requests {
 
             Resource resource = new UrlResource(artifact.get().getFile().toURI());
 
-            System.out.println("["+authentication.getUsername()+"] is now updating "+artifact.get().getName());
+            System.out.println("["+authentication.getUsername()+"] is now updating ["+artifact.get().getName()+"] to ["+artifact.get().getVersion()+" build-"+artifact.get().getBuild()+"]");
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + artifactName + ".jar\"")
                     .body(resource);
         } catch (MalformedURLException e) {
