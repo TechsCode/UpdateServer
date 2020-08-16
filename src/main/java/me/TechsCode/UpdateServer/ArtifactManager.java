@@ -12,23 +12,25 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-public class ArtifactManager extends Thread {
+public abstract class ArtifactManager extends Thread {
 
-    private final File root = new File("artifacts");
-
-    private List<Artifact> artifacts;
+    private File importFolder, artifactsFolder;
 
     public ArtifactManager() {
-        this.artifacts = new ArrayList<>();
+        this.importFolder = new File("import");
+        this.artifactsFolder = new File("artifacts");
+
+        importFolder.mkdir();
+
         start();
     }
+
+    public abstract void onRetrieve(ArtifactList artifacts);
 
     @Override
     public void run(){
         while (true){
-            List<Artifact> artifacts = new ArrayList<>();
-
-            for(File file : Objects.requireNonNull(root.listFiles())){
+            for(File file : Objects.requireNonNull(importFolder.listFiles())){
                 if(!file.getName().endsWith(".jar")) continue;
 
                 try {
@@ -41,12 +43,25 @@ public class ArtifactManager extends Thread {
                         if (e.getName().equals("plugin.yml")){
                             InputStream stream = zipFile.getInputStream(e);
 
-                            Optional<String> version = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).lines()
-                                    .filter(line -> line.startsWith("version"))
-                                    .map(line -> line.replace("version: ", ""))
-                                    .findAny();
+                            List<String> lines = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).lines().collect(Collectors.toList());
 
-                            version.ifPresent(s -> artifacts.add(new Artifact(file.getName().replace(".jar", ""), s, file)));
+                            Optional<String> name = lines.stream()
+                                    .filter(line -> line.startsWith("name"))
+                                    .map(line -> line.replace("name: ", "")).findFirst();
+
+                            Optional<String> version = lines.stream()
+                                    .filter(line -> line.startsWith("version"))
+                                    .map(line -> line.replace("version: ", "")).findFirst();
+
+                            Optional<Integer> build = lines.stream()
+                                    .filter(line -> line.startsWith("build"))
+                                    .map(line -> line.replace("build: ", ""))
+                                    .map(Integer::parseInt).findFirst();
+
+                            if(name.isPresent() && version.isPresent() && build.isPresent()){
+                                File destination = new File(artifactsFolder.getAbsolutePath()+"/"+name.get()+"/"+version.get()+"/"+build.get()+"/"+file.getName());
+                                FileUtils.moveFile(file, destination);
+                            }
                         }
                     }
                 } catch (IOException ex) {
@@ -54,13 +69,22 @@ public class ArtifactManager extends Thread {
                 }
             }
 
-            artifacts.stream().filter(artifact -> !this.artifacts.contains(artifact))
-                    .forEach(artifact -> System.out.println("[System] Loaded "+artifact.getName()+" on version "+artifact.getVersion()));
+            ArtifactList artifacts = new ArtifactList();
+            for(File artifactsFolder : Objects.requireNonNull(artifactsFolder.listFiles())){
+                for(File versionFolder : Objects.requireNonNull(artifactsFolder.listFiles())){
+                    for(File buildFolder : Objects.requireNonNull(versionFolder.listFiles())){
+                        for(File jarFile : Objects.requireNonNull(buildFolder.listFiles())){
+                            String name = artifactsFolder.getName();
+                            String version = versionFolder.getName();
+                            int build = Integer.parseInt(buildFolder.getName());
 
-            artifacts.stream().filter(artifact -> this.artifacts.contains(artifact) && !this.artifacts.get(this.artifacts.indexOf(artifact)).getVersion().equals(artifact.getVersion()))
-                    .forEach(artifact -> System.out.println("[System] Updated "+artifact.getName()+" to "+artifact.getVersion()));
+                            artifacts.add(new Artifact(name, version, build, jarFile));
+                        }
+                    }
+                }
+            }
 
-            this.artifacts = artifacts;
+            onRetrieve(artifacts);
 
             try {
                 sleep(10 * 1000);
@@ -69,10 +93,5 @@ public class ArtifactManager extends Thread {
             }
         }
     }
-
-    public List<Artifact> getArtifacts(){
-        return artifacts;
-    }
-
 
 }

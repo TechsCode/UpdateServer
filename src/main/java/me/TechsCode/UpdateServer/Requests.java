@@ -17,9 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,7 +27,7 @@ public class Requests {
         Config config = UpdateServer.getConfig();
 
         return new OAuthBuilder(config.getDiscordCredentials().getClientId(), config.getDiscordCredentials().getClientSecret())
-                .setScopes(new String[]{"email", "identify"})
+                .setScopes(new String[]{"identify"})
                 .setRedirectURI(config.getHost()+"/discord");
     }
 
@@ -40,13 +38,10 @@ public class Requests {
 
     @GetMapping("/{artifact}/version")
     public String retrieveVersion(@PathVariable(value = "artifact") String artifactName){
-        Artifact artifact = UpdateServer.getArtifact(artifactName);
+        Optional<String> bestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
 
-        if(artifact == null){
-            return "Could not find artifact with the name "+artifactName;
-        }
+        return bestVersion.orElseGet(() -> "Could not find artifact with the name " + artifactName);
 
-        return artifact.getVersion();
     }
 
     @GetMapping("/authenticate")
@@ -92,11 +87,13 @@ public class Requests {
             return "NO-ARTIFACT-NAME";
         }
 
-        Artifact artifact = UpdateServer.getArtifact(artifactName);
+        Optional<String> newestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
 
-        if(artifact == null){
+        // If there is no version available, the artifact does not exist
+        if(!newestVersion.isPresent()){
             return "NO-ARTIFACT";
         }
+
 
         Authentication authentication = AuthenticationManager.getAuthenticationByUID(uid);
 
@@ -115,15 +112,25 @@ public class Requests {
                 .map(name -> name.replace(" ", "").toLowerCase())
                 .collect(Collectors.toList());
 
-        boolean purchased = purchasedArtifacts.contains(artifact.getName().toLowerCase());
+        boolean purchased = purchasedArtifacts.contains(artifactName.toLowerCase());
 
         if(!userId.equals(UpdateServer.getConfig().getAuthorSpigotId()) && !purchased){
-            System.out.println("["+authentication.getUsername()+"] could not update because he has not purchased "+artifact.getName());
+            System.out.println("["+authentication.getUsername()+"] could not update because he has not purchased "+artifactName);
             return "NOT-PURCHASED";
         }
 
+        Optional<Artifact> artifact = UpdateServer.artifacts
+                .filterByName(artifactName)
+                .filterByVersion(newestVersion.get())
+                .getOldestArtifact();
+
+        if(!artifact.isPresent()){
+            System.out.println("Could not get oldest artifact of "+artifactName);
+            return "NO-ARTIFACT";
+        }
+
         // Try to determine file's content type
-        String contentType = request.getServletContext().getMimeType(artifact.getFile().getAbsolutePath());
+        String contentType = request.getServletContext().getMimeType(artifact.get().getFile().getAbsolutePath());
 
         // Fallback to the default content type if type could not be determined
         if(contentType == null) {
@@ -133,9 +140,9 @@ public class Requests {
         try {
             AuthenticationManager.revokeAuthentication(authentication);
 
-            Resource resource = new UrlResource(artifact.getFile().toURI());
+            Resource resource = new UrlResource(artifact.get().getFile().toURI());
 
-            System.out.println("["+authentication.getUsername()+"] is now updating "+artifact.getName());
+            System.out.println("["+authentication.getUsername()+"] is now updating "+artifact.get().getName());
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))

@@ -6,12 +6,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Collections;
+import java.util.List;
 
 @SpringBootApplication
 public class UpdateServer {
 
     private static Config config;
-    private static ArtifactManager artifactManager;
+    public static ArtifactList artifacts;
     private static VerificationStorage verificationStorage;
     private static SpigotAPIClient spigotAPIClient;
 
@@ -23,7 +24,13 @@ public class UpdateServer {
             return;
         }
 
-        artifactManager = new ArtifactManager();
+        new ArtifactManager(){
+            @Override
+            public void onRetrieve(ArtifactList artifacts) {
+                UpdateServer.artifacts = artifacts;
+            }
+        };
+
         verificationStorage = new VerificationStorage(config.getMySQLCredentials());
         spigotAPIClient = new SpigotAPIClient(config.getSpigotAPICredentials().getUrl(), config.getSpigotAPICredentials().getToken());
 
@@ -32,12 +39,6 @@ public class UpdateServer {
                 .singletonMap("server.port", config.getPort()));
 
         app.run(args);
-    }
-
-    public static Artifact getArtifact(String name){
-        return artifactManager.getArtifacts().stream()
-                .filter(artifact -> artifact.getName().equalsIgnoreCase(name))
-                .findFirst().orElse(null);
     }
 
     public static String getVerifiedSpigotId(String discordId){

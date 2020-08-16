@@ -5,11 +5,13 @@ import java.io.File;
 public class Artifact {
 
     private String name, version;
+    private int build;
     private File file;
 
-    public Artifact(String name, String version, File file) {
+    public Artifact(String name, String version, int build, File file) {
         this.name = name;
         this.version = version;
+        this.build = build;
         this.file = file;
     }
 
@@ -19,6 +21,10 @@ public class Artifact {
 
     public String getVersion() {
         return version;
+    }
+
+    public int getBuild() {
+        return build;
     }
 
     public File getFile() {
