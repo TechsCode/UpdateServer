@@ -76,26 +76,20 @@ public class Requests {
         return "<h2>Successfully Authenticated</h2><p>You can now close this window</b>";
     }
 
-    @GetMapping("/{artifact}/download")
-    public Object legacyDownload(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request) {
-        if(artifactName == null) return "NO-ARTIFACT-NAME";
-
-        Optional<String> newestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
-
-        Optional<Artifact> artifact = UpdateServer.artifacts
-                .filterByName(artifactName)
-                .filterByVersion(newestVersion.get())
-                .getOldestArtifact();
-
-        if(artifact.isPresent()){
-            return download(uid, artifactName, artifact.get().getBuild()+"", request);
-        } else {
-            return "NO-ARTIFACT";
-        }
-    }
 
     @GetMapping("/{artifact}/download")
     public Object download(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, @PathVariable(value = "build") String build, HttpServletRequest request){
+        if(build == null){
+            Optional<String> newestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
+
+            Optional<Artifact> artifact = UpdateServer.artifacts
+                    .filterByName(artifactName)
+                    .filterByVersion(newestVersion.get())
+                    .getOldestArtifact();
+
+            build = artifact.get().getBuild()+"";
+        }
+
         if(uid == null) return "NO-UID";
         if(artifactName == null) return "NO-ARTIFACT-NAME";
 
