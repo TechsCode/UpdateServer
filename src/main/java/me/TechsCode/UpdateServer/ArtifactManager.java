@@ -71,8 +71,14 @@ public abstract class ArtifactManager extends Thread {
 
             ArtifactList artifacts = new ArtifactList();
             for(File artifactsFolder : Objects.requireNonNull(artifactsFolder.listFiles())){
+                if(!artifactsFolder.isDirectory()) continue;
+
                 for(File versionFolder : Objects.requireNonNull(artifactsFolder.listFiles())){
+                    if(!versionFolder.isDirectory()) continue;
+
                     for(File buildFolder : Objects.requireNonNull(versionFolder.listFiles())){
+                        if(!buildFolder.isDirectory()) continue;
+
                         for(File jarFile : Objects.requireNonNull(buildFolder.listFiles())){
                             String name = artifactsFolder.getName();
                             String version = versionFolder.getName();
