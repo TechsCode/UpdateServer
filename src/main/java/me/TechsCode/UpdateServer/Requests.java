@@ -131,7 +131,7 @@ public class Requests {
         }
 
         try {
-            AuthenticationManager.revokeAuthentication(authentication);
+            //AuthenticationManager.revokeAuthentication(authentication);
 
             Resource resource = new UrlResource(artifact.get().getFile().toURI());
 
