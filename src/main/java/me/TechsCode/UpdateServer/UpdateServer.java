@@ -1,12 +1,10 @@
 package me.TechsCode.UpdateServer;
 
 import me.TechsCode.SpigotAPI.client.SpigotAPIClient;
-import me.TechsCode.SpigotAPI.client.objects.Purchase;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Collections;
-import java.util.List;
 
 @SpringBootApplication
 public class UpdateServer {
@@ -46,7 +44,7 @@ public class UpdateServer {
     }
 
     public static String[] getPurchasedArtifacts(String spigotUserId){
-        return spigotAPIClient.getPurchases().userId(spigotUserId).getStream().map(Purchase::getResourceName).toArray(String[]::new);
+        return spigotAPIClient.getPurchases().userId(spigotUserId).stream().map(x -> x.getResource().getName()).toArray(String[]::new);
     }
 
     public static Config getConfig() {

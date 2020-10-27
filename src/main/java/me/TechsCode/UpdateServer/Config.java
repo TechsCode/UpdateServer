@@ -1,9 +1,8 @@
 package me.TechsCode.UpdateServer;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.commons.io.FileUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +15,7 @@ import java.nio.file.StandardCopyOption;
 public class Config {
 
     private File file;
-    private JSONObject root;
+    private JsonObject root;
 
     public Config() {
         this.file = new File("config.json");
@@ -33,62 +32,65 @@ public class Config {
         try {
             String json = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 
-            JSONParser jsonParser = new JSONParser();
-            root = (JSONObject) jsonParser.parse(json);
-        } catch (IOException | ParseException e) {
+            root = (JsonObject) JsonParser.parseString(json);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public MySQLCredentials getMySQLCredentials(){
-        JSONObject mysql = (JSONObject) root.get("mysql");
+        JsonObject mysql = root.get("mysql").getAsJsonObject();
 
-        String host = (String) mysql.get("host");
-        String port = (String) mysql.get("port");
-        String database = (String) mysql.get("database");
-        String username = (String) mysql.get("username");
-        String password = (String) mysql.get("password");
+        String host = mysql.get("host").getAsString();
+        String port = mysql.get("port").getAsString();
+        String database = mysql.get("database").getAsString();
+        String username = mysql.get("username").getAsString();
+        String password = mysql.get("password").getAsString();
 
         return new MySQLCredentials(host, port, database, username, password);
     }
 
     public DiscordCredentials getDiscordCredentials(){
-        JSONObject discord = (JSONObject) root.get("discord");
+        JsonObject discord = root.get("discord").getAsJsonObject();
 
-        String clientId = (String) discord.get("clientId");
-        String clientSecret = (String) discord.get("clientSecret");
+        String clientId = discord.get("clientId").getAsString();
+        String clientSecret = discord.get("clientSecret").getAsString();
 
         return new DiscordCredentials(clientId, clientSecret);
     }
 
     public SpigotAPICredentials getSpigotAPICredentials(){
-        JSONObject spigotApi = (JSONObject) root.get("spigotApi");
+        JsonObject spigotApi = root.get("spigotApi").getAsJsonObject();
 
-        String url = (String) spigotApi.get("url");
-        String token = (String) spigotApi.get("token");
+        String url = spigotApi.get("url").getAsString();
+        String token = spigotApi.get("token").getAsString();
 
         return new SpigotAPICredentials(url, token);
     }
 
     public String getHost(){
-        return (String) root.get("host");
+        return root.get("host").getAsString();
     }
 
     public String getPort(){
-        return (String) root.get("port");
+        return root.get("port").getAsString();
     }
 
     public String getAuthorSpigotId(){
-        return (String) root.get("authorSpigotId");
+        return root.get("authorSpigotId").getAsString();
     }
 
     public boolean isConfigured(){
-        return (boolean) root.get("configured");
+        return root.get("configured").getAsBoolean();
     }
 
-    public class MySQLCredentials {
+    public static class MySQLCredentials {
 
-        private String host, port, database, username, password;
+        private final String host;
+        private final String port;
+        private final String database;
+        private final String username;
+        private final String password;
 
         public MySQLCredentials(String host, String port, String database, String username, String password) {
             this.host = host;
@@ -119,9 +121,9 @@ public class Config {
         }
     }
 
-    public class DiscordCredentials {
+    public static class DiscordCredentials {
 
-        private String clientId, clientSecret;
+        private final String clientId, clientSecret;
 
         public DiscordCredentials(String clientId, String clientSecret) {
             this.clientId = clientId;
@@ -137,9 +139,9 @@ public class Config {
         }
     }
 
-    public class SpigotAPICredentials {
+    public static class SpigotAPICredentials {
 
-        private String url, token;
+        private final String url, token;
 
         public SpigotAPICredentials(String url, String token) {
             this.url = url;
