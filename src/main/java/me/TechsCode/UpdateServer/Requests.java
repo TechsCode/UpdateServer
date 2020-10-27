@@ -79,19 +79,6 @@ public class Requests {
 
     @GetMapping("/{artifact}/download")
     public Object download(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request){
-        String build = null;
-
-        if(build == null){
-            Optional<String> newestVersion = UpdateServer.artifacts.filterByName(artifactName).getBestVersion();
-
-            Optional<Artifact> artifact = UpdateServer.artifacts
-                    .filterByName(artifactName)
-                    .filterByVersion(newestVersion.get())
-                    .getOldestArtifact();
-
-            build = artifact.get().getBuild()+"";
-        }
-
         if(uid == null) return "NO-UID";
         if(artifactName == null) return "NO-ARTIFACT-NAME";
 
@@ -113,7 +100,9 @@ public class Requests {
                 .map(name -> name.replace(" ", "").toLowerCase())
                 .collect(Collectors.toList());
 
-        boolean isAuthor = userId.equals(UpdateServer.getConfig().getAuthorSpigotId());
+        String authorSpigotId = UpdateServer.getConfig().getAuthorSpigotId();
+
+        boolean isAuthor = userId.equals(authorSpigotId);
         boolean hasPurchased = purchasedArtifacts.contains(artifactName.toLowerCase());
 
         if(!isAuthor && !hasPurchased){
@@ -121,9 +110,19 @@ public class Requests {
             return "NOT-PURCHASED";
         }
 
+        // Use Newest Version
+        // String version = UpdateServer.artifacts.filterByName(artifactName).getBestVersion().get();
+
+        String version = SpigotMC.getReleasedVersion(authorSpigotId, artifactName);
+
+        if(version == null){
+            return "Could not retrieved latest version from SpigotMC";
+        }
+
         Optional<Artifact> artifact = UpdateServer.artifacts
                 .filterByName(artifactName)
-                .getArtifactWithBuildNumber(Integer.parseInt(build));
+                .filterByVersion(version)
+                .getOldestArtifact();
 
         if(!artifact.isPresent()){
             System.out.println("Could not get desired artifact");
