@@ -17,7 +17,8 @@ repositories {
 
 dependencies {
     compile 'mysql:mysql-connector-java:5.1.17'
-    implementation 'com.github.techscode:spigotapi:build-22'
+    compile 'commons-io:commons-io:2.11.0'
+    implementation 'com.github.techscode:spigotapi:build-35'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.auth0:java-jwt:3.9.0'
     implementation 'com.github.HayateLaTech:OAuth2Discord:-SNAPSHOT'

@@ -3,8 +3,6 @@ package me.TechsCode.UpdateServer;
 import bell.oauth.discord.domain.User;
 import bell.oauth.discord.main.OAuthBuilder;
 import bell.oauth.discord.main.Response;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -14,11 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 public class Requests {
@@ -62,20 +58,25 @@ public class Requests {
         Response response = builder.exchange(code);
 
         if(response == Response.ERROR){
-            return "An error occured when receiving the discord redirect";
+            return "An error occurred when receiving the discord redirect";
         }
 
         User user = builder.getUser();
 
         Authentication authentication = AuthenticationManager.getAuthentication(request.getRemoteAddr());
+
+        List<DiscordRole> roles = UpdateServer.getDiscordAPI().GetRoles(user.getId());
+        if (roles.isEmpty()){
+            System.out.println("["+user.getUsername()+"] not found in discord");
+            return "<h2>Could Not Authenticate</h2><p>You are not in our support discord</p><h3><a href='http://discord.techscode.com/'>Join Here</a></h3>";
+        }
+
         authentication.setDiscordId(user.getId());
         authentication.setUsername(user.getUsername());
-
-        System.out.println("["+user.getUsername()+"] has been authenticated");
+        authentication.setRoles(roles);
 
         return "<h2>Successfully Authenticated</h2><p>You can now close this window</b>";
     }
-
 
     @GetMapping("/{artifact}/download")
     public Object download(@RequestParam(value = "uid") String uid, @PathVariable(value = "artifact") String artifactName, HttpServletRequest request){
@@ -88,31 +89,51 @@ public class Requests {
             return "NOT-AUTHENTICATED";
         }
 
-        // Get Spigot UserId from Database (which is only possible if he is verified)
-        String userId = UpdateServer.getVerifiedSpigotId(authentication.getDiscordId());
-        if(userId == null){
+        AtomicReference<Boolean> isVerified = new AtomicReference<>(false);
+        AtomicReference<Boolean> ownsPlugin = new AtomicReference<>(false);
+
+        List<DiscordRole> userRoles = authentication.getRoles();
+        userRoles.forEach(userRole -> {
+            // Verified Role
+            if (Objects.equals(userRole.getId(), "416174015141642240")) isVerified.set(true);
+
+            // Plugin Role
+            String pluginName = userRole.getName().toLowerCase().replace(" ", "");
+            String artifactNameCompare = artifactName.toLowerCase().replace(" ", "");
+            if ( Objects.equals(pluginName, artifactNameCompare) ) ownsPlugin.set(true);
+
+            // Coding Wizard Role
+            if (Objects.equals(userRole.getId(), "311178859171282944")) {
+                ownsPlugin.set(true);
+                isVerified.set(true);
+            }
+            // Developer Role
+            if (Objects.equals(userRole.getId(), "774690360836096062")) {
+                ownsPlugin.set(true);
+                isVerified.set(true);
+            }
+            // Assistant Role
+            if (Objects.equals(userRole.getId(), "608113993038561325")) {
+                ownsPlugin.set(true);
+                isVerified.set(true);
+            }
+        });
+
+        if (!isVerified.get()){
+            System.out.println(authentication.getRoles().toString());
             System.out.println("["+authentication.getUsername()+"] could not update because he is not verified");
             return "NOT-VERIFIED";
         }
 
-        // Check if he has purchased the plugin
-        List<String> purchasedArtifacts = Arrays.stream(UpdateServer.getPurchasedArtifacts(userId))
-                .map(name -> name.replace(" ", "").toLowerCase())
-                .collect(Collectors.toList());
-
-        String authorSpigotId = UpdateServer.getConfig().getAuthorSpigotId();
-
-        boolean isAuthor = userId.equals(authorSpigotId);
-        boolean hasPurchased = purchasedArtifacts.contains(artifactName.toLowerCase());
-
-        if(!isAuthor && !hasPurchased){
+        if(!ownsPlugin.get()){
             System.out.println("["+authentication.getUsername()+"] could not update because he has not purchased "+artifactName);
             return "NOT-PURCHASED";
         }
 
+        String authorSpigotId = UpdateServer.getConfig().getAuthorSpigotId();
+
         // Use Newest Version
         // String version = UpdateServer.artifacts.filterByName(artifactName).getBestVersion().get();
-
         String version = SpigotMC.getReleasedVersion(authorSpigotId, artifactName);
 
         if(version == null){

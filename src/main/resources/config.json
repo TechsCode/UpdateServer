@@ -4,22 +4,23 @@
 
   "authorSpigotId": "00000",
 
-  "mysql": {
-    "host": "localhost",
-    "port": "3306",
-    "database": "database",
-    "username": "username",
-    "password": "password"
-  },
-
   "discord": {
     "clientId": "",
     "clientSecret": ""
   },
 
-  "spigotApi": {
-    "url": "https://api.domain.com",
-    "token": "xxxxxx"
+  "discordAPI": {
+    "url": "",
+    "key": ""
+  },
+
+  "spigetApi": {
+    "url": "https://api.spiget.org/v2/"
+  },
+
+  "techSpigotApi": {
+    "url": "https://spigotapi.techscode.com/",
+    "token": ""
   },
 
   "configured": false

@@ -38,18 +38,6 @@ public class Config {
         }
     }
 
-    public MySQLCredentials getMySQLCredentials(){
-        JsonObject mysql = root.get("mysql").getAsJsonObject();
-
-        String host = mysql.get("host").getAsString();
-        String port = mysql.get("port").getAsString();
-        String database = mysql.get("database").getAsString();
-        String username = mysql.get("username").getAsString();
-        String password = mysql.get("password").getAsString();
-
-        return new MySQLCredentials(host, port, database, username, password);
-    }
-
     public DiscordCredentials getDiscordCredentials(){
         JsonObject discord = root.get("discord").getAsJsonObject();
 
@@ -59,8 +47,25 @@ public class Config {
         return new DiscordCredentials(clientId, clientSecret);
     }
 
+    public DiscordAPICredentials getDiscordAPICredentials(){
+        JsonObject discord = root.get("discordAPI").getAsJsonObject();
+
+        String url = discord.get("url").getAsString();
+        String key = discord.get("key").getAsString();
+
+        return new DiscordAPICredentials(url, key);
+    }
+
+    public SpigetAPICredentials getSpigetAPICredentials(){
+        JsonObject spigotApi = root.get("spigetApi").getAsJsonObject();
+
+        String url = spigotApi.get("url").getAsString();
+
+        return new SpigetAPICredentials(url);
+    }
+
     public SpigotAPICredentials getSpigotAPICredentials(){
-        JsonObject spigotApi = root.get("spigotApi").getAsJsonObject();
+        JsonObject spigotApi = root.get("techSpigotApi").getAsJsonObject();
 
         String url = spigotApi.get("url").getAsString();
         String token = spigotApi.get("token").getAsString();
@@ -139,9 +144,41 @@ public class Config {
         }
     }
 
+    public static class DiscordAPICredentials {
+
+        private final String url, key;
+
+        public DiscordAPICredentials(String url, String key) {
+            this.url = url;
+            this.key = key;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public String getKey() {
+            return key;
+        }
+    }
+
+    public static class SpigetAPICredentials {
+
+        private final String url;
+
+        public SpigetAPICredentials(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
+
     public static class SpigotAPICredentials {
 
-        private final String url, token;
+        private final String url;
+        private final String token;
 
         public SpigotAPICredentials(String url, String token) {
             this.url = url;

@@ -14,13 +14,16 @@ import java.util.zip.ZipInputStream;
 
 public abstract class ArtifactManager extends Thread {
 
-    private File importFolder, artifactsFolder;
+    private final File importFolder;
+    private final File artifactsFolder;
 
     public ArtifactManager() {
         this.importFolder = new File("import");
         this.artifactsFolder = new File("artifacts");
 
-        importFolder.mkdir();
+        if(!artifactsFolder.exists()){
+            artifactsFolder.mkdirs();
+        }
 
         start();
     }
@@ -30,6 +33,11 @@ public abstract class ArtifactManager extends Thread {
     @Override
     public void run(){
         while (true){
+
+            if(importFolder.listFiles() == null){
+                return;
+            }
+
             for(File file : Objects.requireNonNull(importFolder.listFiles())){
                 if(!file.getName().endsWith(".jar")) continue;
 
@@ -51,6 +59,9 @@ public abstract class ArtifactManager extends Thread {
 
                             if(name.isPresent() && version.isPresent() && build.isPresent()){
                                 File destination = new File(artifactsFolder.getAbsolutePath()+"/"+name.get()+"/"+version.get()+"/"+build.get()+"/"+file.getName());
+                                if (destination.exists()){
+                                    destination.delete();
+                                }
                                 FileUtils.moveFile(file, destination);
                             }
                         }

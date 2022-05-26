@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class AuthenticationManager {
 
     private static HashMap<String, Authentication> authentications = new HashMap<>();
-
+    
     public static void newAuthentication(String ipAddr, String uid){
         authentications.put(ipAddr, new Authentication(uid, ipAddr));
     }
